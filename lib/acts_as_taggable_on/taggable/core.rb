@@ -224,6 +224,12 @@ module ActsAsTaggableOn::Taggable
 
         query = self
         query = self.select(select_clause.join(',')) unless select_clause.empty?
+
+        # This will prevent soft deleted taggings to included in list.
+        if ActsAsTaggableOn::Tagging.column_names.include?("deleted_at")
+          joins << " AND " + sanitize_sql(["#{taggings_alias}.deleted_at IS NULL"])
+        end
+
         query.joins(joins.join(' '))
           .where(conditions.join(' AND '))
           .group(group)
